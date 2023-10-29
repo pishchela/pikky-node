@@ -1,6 +1,6 @@
-import { getUsersInRoom, isAllRoomUsersAreReady, setUserReady } from "../../utils/users";
+import { getUsersById, getUsersInRoom, isAllRoomUsersAreReady, setUserReady } from "../../utils/users";
 import { setBoardTypeToGame } from "../../utils/room";
-import { SocketEvents } from "../index";
+import { SocketEvents, SocketNotificationEvents } from "../index";
 import { Socket } from "socket.io/dist/socket";
 import { Server } from "socket.io";
 
@@ -13,4 +13,7 @@ export const userReadyEvent = (socket: Socket, io: Server, roomName: string): vo
     io.to(roomName).emit(SocketEvents.USER_DATA, {
         users: getUsersInRoom(roomName),
     });
+
+    const { username } = getUsersById(roomName, socket.id);
+    socket.broadcast.to(roomName).emit(SocketNotificationEvents.USER_SET_READY, { username });
 }

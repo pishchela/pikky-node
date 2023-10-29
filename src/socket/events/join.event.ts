@@ -4,9 +4,10 @@ import { Socket } from "socket.io/dist/socket";
 import { addUser, getUsersInRoom } from "../../utils/users";
 import { setBoardTypeToEdit } from "../../utils/room";
 import { getCardsInRoom } from "../../utils/cards";
-import { SocketEvents } from "../index";
+import { SocketEvents, SocketNotificationEvents } from "../index";
 
 export const joinEvent = (socket: Socket, io: Server, options: any, callback: Function): void => {
+    // TODO: need to close join if boardType of room is !EDIT and name is not in a room ( user can reload page)
     const { error, user } = addUser({id: socket.id, ...options});
     if (error) {
         return callback(error);
@@ -24,6 +25,8 @@ export const joinEvent = (socket: Socket, io: Server, options: any, callback: Fu
     io.to(user.room).emit(SocketEvents.CARDS_DATA, {
         cards: getCardsInRoom(user.room),
     });
+
+    socket.broadcast.to(user.room).emit(SocketNotificationEvents.USER_CONNECTED, { username: user.username });
 
     callback();
 }

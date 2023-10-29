@@ -22,18 +22,16 @@ export enum SocketEvents {
     SET_BORD_TYPE_SCORE = 'setBordTypeScore',
 }
 
+export enum SocketNotificationEvents {
+    USER_CONNECTED = 'userConnected',
+    USER_DISCONNECTED = 'userDisconnected',
+    USER_SET_READY = 'userSetReady'
+}
+
 io.on(SocketEvents.CONNECTION, (socket) => {
-
-    // TODO: need to close join if boardType of room is !EDIT
-
     socket.on(SocketEvents.JOIN, (options: any, callback: any) => joinEvent(socket, io, options, callback));
-
     socket.on(SocketEvents.EDIT_CARD, ({ card, room }: any, callback: any) => editCardEvent(socket, io, card, room, callback));
-
     socket.on(SocketEvents.DELETE_CARD, ({id, room}: any, callback: any) => deleteCardEvent(socket, io, id, room, callback));
-
     socket.on(SocketEvents.USER_READY, ({ room }: any, callback: any) => userReadyEvent(socket, io, room));
-
     socket.on(SocketEvents.DISCONNECT, () => disconnectEvent(socket, io));
-
 });

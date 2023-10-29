@@ -59,6 +59,9 @@ export const getUsersInRoom = (roomName: string) => {
     return usersMap[roomName];
 };
 
+export const getUsersById = (roomName: string, id: string) => {
+    return usersMap[roomName].find((user) => user.id === id);
+};
 
 export const setUserReady = (id: string, room: string) => {
     const user: User = usersMap[room]?.find((user) => user.id === id);

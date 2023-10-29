@@ -1,18 +1,10 @@
 import { Server } from "socket.io";
 
-import {
-    addUser,
-    getUsersInRoom,
-    isAllRoomUsersAreReady,
-    removeUser,
-    setUserReady,
-} from "../utils/users";
-import {
-    deleteCard,
-    editCard,
-    getCardsInRoom,
-} from "../utils/cards";
-import { setBoardTypeToEdit, setBoardTypeToGame } from "../utils/room";
+import { joinEvent } from "./events/join.event";
+import { disconnectEvent } from "./events/disconnect.event";
+import { userReadyEvent } from "./events/user-ready.event";
+import { editCardEvent } from "./events/edit-card.event";
+import { deleteCardEvent } from "./events/delete-card.event";
 
 const io = new Server(8080);
 
@@ -34,71 +26,14 @@ io.on(SocketEvents.CONNECTION, (socket) => {
 
     // TODO: need to close join if boardType of room is !EDIT
 
-    socket.on(SocketEvents.JOIN, (options: any, callback: any) => {
-        const { error, user } = addUser({id: socket.id, ...options});
-        if (error) {
-            return callback(error);
-        }
-        if (getUsersInRoom(user.room).length === 1) {
-            io.to(user.room).emit(SocketEvents.SET_BORD_TYPE_EDIT);
-            setBoardTypeToEdit(user.room);
-        }
-        socket.join(user.room);
+    socket.on(SocketEvents.JOIN, (options: any, callback: any) => joinEvent(socket, io, options, callback));
 
-        io.to(user.room).emit(SocketEvents.USER_DATA, {
-            users: getUsersInRoom(user.room),
-        });
+    socket.on(SocketEvents.EDIT_CARD, ({ card, room }: any, callback: any) => editCardEvent(socket, io, card, room, callback));
 
-        io.to(user.room).emit(SocketEvents.CARDS_DATA, {
-            cards: getCardsInRoom(user.room),
-        });
+    socket.on(SocketEvents.DELETE_CARD, ({id, room}: any, callback: any) => deleteCardEvent(socket, io, id, room, callback));
 
-        callback();
-    });
+    socket.on(SocketEvents.USER_READY, ({ room }: any, callback: any) => userReadyEvent(socket, io, room));
 
-    socket.on(SocketEvents.EDIT_CARD, ({ card, room }: any, callback: any) => {
-        editCard(card, room);
-        io.to(room).emit(SocketEvents.CARDS_DATA, {
-            cards: getCardsInRoom(room),
-        });
-    });
-
-    socket.on(SocketEvents.DELETE_CARD, ({id, room}: any, callback: any) => {
-        deleteCard(id);
-        io.to(room).emit(SocketEvents.CARDS_DATA, {
-            cards: getCardsInRoom(room),
-        });
-    });
-
-    socket.on(SocketEvents.USER_READY, ({ room }: any, callback: any) => {
-        setUserReady(socket.id, room);
-        if (isAllRoomUsersAreReady(room)) {
-            //
-            setBoardTypeToGame(room);
-            io.to(room).emit(SocketEvents.SET_BORD_TYPE_GAME);
-        }
-        io.to(room).emit(SocketEvents.USER_DATA, {
-            users: getUsersInRoom(room),
-        });
-    });
-
-    socket.on(SocketEvents.DISCONNECT, () => {
-        const user = removeUser(socket.id);
-
-        if (user) {
-            const room = user.room;
-            io.to(room).emit(SocketEvents.USER_DATA, {
-                users: getUsersInRoom(room),
-                room,
-            });
-            if (getUsersInRoom(room).length === 0) {
-                //
-                io.to(room).emit(SocketEvents.SET_BORD_TYPE_EDIT);
-            } else if (isAllRoomUsersAreReady(room)) {
-                //
-                io.to(room).emit(SocketEvents.SET_BORD_TYPE_GAME);
-            }
-        }
-    });
+    socket.on(SocketEvents.DISCONNECT, () => disconnectEvent(socket, io));
 
 });

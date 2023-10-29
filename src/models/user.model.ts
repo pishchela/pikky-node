@@ -3,4 +3,5 @@ export interface User {
     username: string;
     avatarId?: number;
     room: string;
+    isReady: boolean;
 }

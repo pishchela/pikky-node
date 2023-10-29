@@ -2,7 +2,7 @@ import express, { Application } from 'express';
 import http  from 'http';
 import cors  from 'cors';
 
-import './socket/socket';
+import './socket/index';
 // @ts-ignore
 const PORT = process.env.PORT | 3000;
 const app: Application = express();
